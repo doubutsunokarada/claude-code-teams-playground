@@ -6,6 +6,7 @@ import (
 	"math"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -126,6 +127,14 @@ func (h *TodoHandler) Create(c echo.Context) error {
 		default:
 			return handleError(c, model.NewValidationError(map[string]string{
 				"priority": "priorityはlow, medium, highのいずれかを指定してください",
+			}))
+		}
+	}
+
+	if req.DueDate != nil && *req.DueDate != "" {
+		if _, err := time.Parse("2006-01-02", *req.DueDate); err != nil {
+			return handleError(c, model.NewValidationError(map[string]string{
+				"due_date": "日付の形式が正しくありません（YYYY-MM-DD）",
 			}))
 		}
 	}
@@ -253,6 +262,13 @@ func (h *TodoHandler) Update(c echo.Context) error {
 		}
 	}
 	if req.DueDate != nil {
+		if *req.DueDate != "" {
+			if _, err := time.Parse("2006-01-02", *req.DueDate); err != nil {
+				return handleError(c, model.NewValidationError(map[string]string{
+					"due_date": "日付の形式が正しくありません（YYYY-MM-DD）",
+				}))
+			}
+		}
 		updates["due_date"] = *req.DueDate
 	}
 	if req.CategoryID != nil {

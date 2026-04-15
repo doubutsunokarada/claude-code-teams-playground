@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"regexp"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -19,6 +20,8 @@ const (
 	AccessTokenExpiry  = 15 * time.Minute
 	RefreshTokenExpiry = 7 * 24 * time.Hour
 )
+
+var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
 
 type AuthService struct {
 	userRepo  *repository.UserRepository
@@ -58,6 +61,8 @@ func (s *AuthService) Register(ctx context.Context, req RegisterRequest) (*model
 	fields := make(map[string]string)
 	if req.Email == "" {
 		fields["email"] = "メールアドレスは必須です"
+	} else if !emailRegex.MatchString(req.Email) {
+		fields["email"] = "メールアドレスの形式が正しくありません"
 	}
 	if req.Password == "" {
 		fields["password"] = "パスワードは必須です"
@@ -107,6 +112,8 @@ func (s *AuthService) Login(ctx context.Context, req LoginRequest) (*model.User,
 	fields := make(map[string]string)
 	if req.Email == "" {
 		fields["email"] = "メールアドレスは必須です"
+	} else if !emailRegex.MatchString(req.Email) {
+		fields["email"] = "メールアドレスの形式が正しくありません"
 	}
 	if req.Password == "" {
 		fields["password"] = "パスワードは必須です"
@@ -156,6 +163,15 @@ func (s *AuthService) Refresh(ctx context.Context, req RefreshRequest) (*TokenPa
 		return nil, model.NewAppError(http.StatusUnauthorized, "UNAUTHORIZED", "無効なトークンです")
 	}
 
+	// Check if user has logged out (all refresh tokens invalidated)
+	logoutTime, err := s.rdb.Get(ctx, fmt.Sprintf("logout:%s", userID.String())).Int64()
+	if err == nil {
+		iat, _ := claims["iat"].(float64)
+		if int64(iat) <= logoutTime {
+			return nil, model.NewAppError(http.StatusUnauthorized, "TOKEN_EXPIRED", "ログアウト済みのため、再度ログインしてください")
+		}
+	}
+
 	jti, _ := claims["jti"].(string)
 	revoked, err := s.rdb.Get(ctx, "revoked:"+jti).Result()
 	if err == nil && revoked == "1" {
@@ -181,6 +197,10 @@ func (s *AuthService) Logout(ctx context.Context, accessToken string, userID uui
 }
 
 func (s *AuthService) ValidateAccessToken(tokenString string) (uuid.UUID, error) {
+	return s.ValidateAccessTokenWithContext(context.Background(), tokenString)
+}
+
+func (s *AuthService) ValidateAccessTokenWithContext(ctx context.Context, tokenString string) (uuid.UUID, error) {
 	claims, err := s.parseToken(tokenString)
 	if err != nil {
 		return uuid.Nil, err
@@ -189,6 +209,14 @@ func (s *AuthService) ValidateAccessToken(tokenString string) (uuid.UUID, error)
 	tokenType, _ := claims["type"].(string)
 	if tokenType != "access" {
 		return uuid.Nil, fmt.Errorf("invalid token type")
+	}
+
+	jti, _ := claims["jti"].(string)
+	if jti != "" {
+		revoked, err := s.rdb.Get(ctx, "revoked:"+jti).Result()
+		if err == nil && revoked == "1" {
+			return uuid.Nil, fmt.Errorf("token has been revoked")
+		}
 	}
 
 	userIDStr, _ := claims["sub"].(string)

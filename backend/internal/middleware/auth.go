@@ -35,7 +35,7 @@ func AuthMiddleware(authService *service.AuthService) echo.MiddlewareFunc {
 				})
 			}
 
-			userID, err := authService.ValidateAccessToken(parts[1])
+			userID, err := authService.ValidateAccessTokenWithContext(c.Request().Context(), parts[1])
 			if err != nil {
 				return c.JSON(http.StatusUnauthorized, map[string]interface{}{
 					"error": map[string]string{
