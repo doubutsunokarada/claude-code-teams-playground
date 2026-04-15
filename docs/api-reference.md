@@ -169,6 +169,17 @@ refresh_token を使用して新しいトークンペアを取得します。
 }
 ```
 
+**Error `401 Unauthorized`:**
+
+```json
+{
+  "error": {
+    "code": "TOKEN_EXPIRED",
+    "message": "リフレッシュトークンが期限切れです"
+  }
+}
+```
+
 ---
 
 ### POST /auth/logout
@@ -532,6 +543,8 @@ TODOを削除します。
 ---
 
 ## ユーザー (User)
+
+全エンドポイント認証必須。ログイン中のユーザー自身のデータのみにアクセスできます。
 
 ### GET /users/me
 

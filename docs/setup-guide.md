@@ -28,8 +28,8 @@ TODO管理Webアプリの開発環境構築手順を説明します。
 ## リポジトリのクローン
 
 ```bash
-git clone https://github.com/sonicmoov/automation-tasks-playground.git
-cd automation-tasks-playground
+git clone https://github.com/doubutsunokarada/claude-code-teams-playground.git
+cd claude-code-teams-playground
 ```
 
 ---
@@ -103,26 +103,53 @@ npm run dev
 
 ### Backend（Go）
 
-Backend は `compose.yaml` で定義された環境変数を使用します。カスタマイズが必要な場合:
+Backend は環境変数で設定を管理します。`.env` ファイル（またはシステム環境変数）で設定してください。
+
+**ミドルウェアのみDocker・Backend/Frontendはローカル実行する場合:**
 
 ```bash
 cd backend
-cp .env.example .env  # 例ファイルがあれば
+cat > .env << 'EOF'
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=todo_user
+DB_PASSWORD=todo_password
+DB_NAME=todo_app
+REDIS_HOST=localhost
+REDIS_PORT=6379
+JWT_SECRET=dev-secret-key-change-in-production
+APP_ENV=development
+EOF
 ```
 
-`.env` ファイル（またはシステム環境変数）で設定:
+**全サービスをDocker Composeで起動する場合:**
 
-| 変数 | デフォルト | 説明 |
-|---|---|---|
-| `DB_HOST` | `postgres` | PostgreSQL ホスト |
-| `DB_PORT` | `5432` | PostgreSQL ポート |
-| `DB_USER` | `todo_user` | PostgreSQL ユーザー |
-| `DB_PASSWORD` | `todo_password` | PostgreSQL パスワード |
-| `DB_NAME` | `todo_app` | PostgreSQL データベース名 |
-| `REDIS_HOST` | `redis` | Redis ホスト |
-| `REDIS_PORT` | `6379` | Redis ポート |
-| `JWT_SECRET` | `dev-secret-key-change-in-production` | JWT署名キー（開発用） |
-| `APP_ENV` | `development` | 実行環境（development/production） |
+```bash
+cd backend
+cat > .env << 'EOF'
+DB_HOST=postgres
+DB_PORT=5432
+DB_USER=todo_user
+DB_PASSWORD=todo_password
+DB_NAME=todo_app
+REDIS_HOST=redis
+REDIS_PORT=6379
+JWT_SECRET=dev-secret-key-change-in-production
+APP_ENV=development
+EOF
+```
+
+| 変数 | ローカル実行時 | Docker Compose時 | 説明 |
+|---|---|---|---|
+| `DB_HOST` | `localhost` | `postgres` | PostgreSQL ホスト |
+| `DB_PORT` | `5432` | `5432` | PostgreSQL ポート |
+| `DB_USER` | `todo_user` | `todo_user` | PostgreSQL ユーザー |
+| `DB_PASSWORD` | `todo_password` | `todo_password` | PostgreSQL パスワード |
+| `DB_NAME` | `todo_app` | `todo_app` | PostgreSQL データベース名 |
+| `REDIS_HOST` | `localhost` | `redis` | Redis ホスト |
+| `REDIS_PORT` | `6379` | `6379` | Redis ポート |
+| `JWT_SECRET` | `dev-secret-key-change-in-production` | `dev-secret-key-change-in-production` | JWT署名キー（開発用） |
+| `APP_ENV` | `development` | `development` | 実行環境（development/production） |
 
 **注意:** `JWT_SECRET` は開発時は固定値でも構いませんが、本番環境では強力なランダム値に変更してください。
 
