@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { apiClient } from '@/lib/api-client';
+import { useToast } from '@/components/Toast';
 import type { Todo, TodoStatus, TodoPriority, Category, Pagination as PaginationType } from '@/types/api';
 import { TodoItem } from './TodoItem';
 import { TodoFilter } from './TodoFilter';
@@ -14,6 +15,7 @@ export function TodoList() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const { showToast } = useToast();
 
   const [statusFilter, setStatusFilter] = useState<TodoStatus | ''>('');
   const [priorityFilter, setPriorityFilter] = useState<TodoPriority | ''>('');
@@ -57,6 +59,46 @@ export function TodoList() {
     fetchTodos();
   }, [fetchTodos]);
 
+  const handleToggleDone = useCallback(
+    async (todo: Todo) => {
+      const newStatus = todo.status === 'done' ? 'pending' : 'done';
+
+      // 楽観的更新
+      setTodos((prev) =>
+        prev.map((t) => (t.id === todo.id ? { ...t, status: newStatus } : t)),
+      );
+
+      try {
+        await apiClient.updateTodo(todo.id, { status: newStatus });
+        showToast(newStatus === 'done' ? '完了にしました' : '未完了に戻しました');
+      } catch {
+        // ロールバック
+        setTodos((prev) =>
+          prev.map((t) => (t.id === todo.id ? { ...t, status: todo.status } : t)),
+        );
+        showToast('更新に失敗しました', 'error');
+      }
+    },
+    [showToast],
+  );
+
+  const handleDelete = useCallback(
+    async (todo: Todo) => {
+      // 楽観的更新
+      setTodos((prev) => prev.filter((t) => t.id !== todo.id));
+
+      try {
+        await apiClient.deleteTodo(todo.id);
+        showToast('削除しました');
+      } catch {
+        // ロールバック
+        fetchTodos();
+        showToast('削除に失敗しました', 'error');
+      }
+    },
+    [showToast, fetchTodos],
+  );
+
   const handleStatusChange = (status: TodoStatus | '') => {
     setStatusFilter(status);
     setPage(1);
@@ -76,14 +118,14 @@ export function TodoList() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <TodoFilter
-        status={statusFilter}
-        priority={priorityFilter}
-        categoryId={categoryFilter}
-        categories={categories}
-        onStatusChange={handleStatusChange}
-        onPriorityChange={handlePriorityChange}
-        onCategoryChange={handleCategoryChange}
-      />
+          status={statusFilter}
+          priority={priorityFilter}
+          categoryId={categoryFilter}
+          categories={categories}
+          onStatusChange={handleStatusChange}
+          onPriorityChange={handlePriorityChange}
+          onCategoryChange={handleCategoryChange}
+        />
         <Link
           href="/todos/new"
           className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
@@ -105,7 +147,12 @@ export function TodoList() {
       ) : (
         <div className="space-y-2">
           {todos.map((todo) => (
-            <TodoItem key={todo.id} todo={todo} />
+            <TodoItem
+              key={todo.id}
+              todo={todo}
+              onToggleDone={handleToggleDone}
+              onDelete={handleDelete}
+            />
           ))}
         </div>
       )}
