@@ -2,6 +2,7 @@
 
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useAuth } from '@/hooks/useAuth';
+import { TodoList } from '@/components/todo/TodoList';
 
 export default function Home() {
   return (
@@ -31,7 +32,7 @@ function Dashboard() {
         </div>
       </header>
       <main className="mx-auto max-w-7xl px-4 py-8">
-        <p className="text-gray-600">TODO一覧がここに表示されます</p>
+        <TodoList />
       </main>
     </div>
   );
