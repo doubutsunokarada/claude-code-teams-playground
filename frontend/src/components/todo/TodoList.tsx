@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { apiClient } from '@/lib/api-client';
 import type { Todo, TodoStatus, TodoPriority, Category, Pagination as PaginationType } from '@/types/api';
 import { TodoItem } from './TodoItem';
@@ -73,7 +74,8 @@ export function TodoList() {
 
   return (
     <div className="space-y-4">
-      <TodoFilter
+      <div className="flex items-center justify-between">
+        <TodoFilter
         status={statusFilter}
         priority={priorityFilter}
         categoryId={categoryFilter}
@@ -82,6 +84,13 @@ export function TodoList() {
         onPriorityChange={handlePriorityChange}
         onCategoryChange={handleCategoryChange}
       />
+        <Link
+          href="/todos/new"
+          className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+        >
+          新規作成
+        </Link>
+      </div>
 
       {error && (
         <div role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">

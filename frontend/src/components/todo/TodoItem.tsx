@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { Todo } from '@/types/api';
 import { TodoStatusBadge } from './TodoStatusBadge';
 import { TodoPriorityBadge } from './TodoPriorityBadge';
@@ -31,6 +32,12 @@ export function TodoItem({ todo }: TodoItemProps) {
           {formattedDate && <span className="text-xs text-gray-500">期限: {formattedDate}</span>}
         </div>
       </div>
+      <Link
+        href={`/todos/${todo.id}/edit`}
+        className="ml-4 shrink-0 rounded-md border border-gray-300 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-50"
+      >
+        編集
+      </Link>
     </div>
   );
 }
