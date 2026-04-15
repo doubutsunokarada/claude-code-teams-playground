@@ -2,18 +2,18 @@
 
 import Link from 'next/link';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { CategoryList } from '@/components/category/CategoryList';
 import { useAuth } from '@/hooks/useAuth';
-import { TodoList } from '@/components/todo/TodoList';
 
-export default function Home() {
+export default function CategoriesPage() {
   return (
     <ProtectedRoute>
-      <Dashboard />
+      <CategoriesContent />
     </ProtectedRoute>
   );
 }
 
-function Dashboard() {
+function CategoriesContent() {
   const { user, logout } = useAuth();
 
   return (
@@ -23,10 +23,10 @@ function Dashboard() {
           <div className="flex items-center gap-6">
             <h1 className="text-xl font-bold text-gray-900">TODO管理アプリ</h1>
             <nav className="flex gap-4 text-sm">
-              <Link href="/" className="font-medium text-blue-600">
+              <Link href="/" className="text-gray-600 hover:text-gray-900">
                 TODO一覧
               </Link>
-              <Link href="/categories" className="text-gray-600 hover:text-gray-900">
+              <Link href="/categories" className="font-medium text-blue-600">
                 カテゴリ管理
               </Link>
             </nav>
@@ -43,7 +43,7 @@ function Dashboard() {
         </div>
       </header>
       <main className="mx-auto max-w-7xl px-4 py-8">
-        <TodoList />
+        <CategoryList />
       </main>
     </div>
   );
