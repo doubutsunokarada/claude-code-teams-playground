@@ -18,35 +18,20 @@ import type {
   ApiError,
 } from '@/types/api';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080/api/v1';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
 
 class ApiClient {
   private accessToken: string | null = null;
   private refreshToken: string | null = null;
 
-  constructor() {
-    if (typeof window !== 'undefined') {
-      this.accessToken = localStorage.getItem('access_token');
-      this.refreshToken = localStorage.getItem('refresh_token');
-    }
-  }
-
   setTokens(accessToken: string, refreshToken: string) {
     this.accessToken = accessToken;
     this.refreshToken = refreshToken;
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('access_token', accessToken);
-      localStorage.setItem('refresh_token', refreshToken);
-    }
   }
 
   clearTokens() {
     this.accessToken = null;
     this.refreshToken = null;
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-    }
   }
 
   getAccessToken(): string | null {

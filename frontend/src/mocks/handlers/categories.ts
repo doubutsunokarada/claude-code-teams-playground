@@ -6,6 +6,10 @@ const API_BASE = 'http://localhost:8080/api/v1';
 
 let categories = [...mockCategories];
 
+export function resetCategories() {
+  categories = [...mockCategories];
+}
+
 function requireAuth(request: Request) {
   const authHeader = request.headers.get('Authorization');
   if (!authHeader?.startsWith('Bearer ')) {

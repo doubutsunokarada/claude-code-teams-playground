@@ -6,6 +6,10 @@ const API_BASE = 'http://localhost:8080/api/v1';
 
 let todos = [...mockTodos];
 
+export function resetTodos() {
+  todos = [...mockTodos];
+}
+
 function requireAuth(request: Request) {
   const authHeader = request.headers.get('Authorization');
   if (!authHeader?.startsWith('Bearer ')) {
